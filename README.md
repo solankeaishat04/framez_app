@@ -1,50 +1,92 @@
-# Welcome to your Expo app 👋
+# Framez - Social Media App 📱
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A modern, full-featured social media application built with React Native, Expo, Convex, and Firebase. Framez allows users to share posts, connect with others, and showcase their work in a clean, intuitive interface.
 
-## Get started
+## 🎯 Project Overview
 
-1. Install dependencies
+**Framez** is a mobile social application that enables users to share posts with text and images. Each user has a personalized profile to view their posts and activity. Built as part of the Hannel Frontend Stage 4 Task, this app demonstrates advanced React Native development with real-time data, authentication, and polished UI/UX.
 
-   ```bash
-   npm install
-   ```
+### 📋 Core Objectives
+- ✅ Implement user authentication (sign-up, login, logout) using Convex with custom auth
+- ✅ Allow users to create posts with text and images
+- ✅ Display a feed of posts from all users in chronological order
+- ✅ Display current user's profile with their posts and activity
+- ✅ Persistent user sessions across app restarts
 
-2. Start the app
+## 🚀 Features
 
-   ```bash
-   npx expo start
-   ```
+### 🔐 Authentication
+- Secure login, registration, and logout flow
+- Persistent user sessions (remain logged in after reopening the app)
+- Custom authentication context integrated with Convex backend
+- Protected routes and automatic redirects
 
-In the output, you'll find options to open the app in a
+### 📝 Posts
+- Create and upload posts containing text and/or multiple images
+- Display all posts in chronological feed (most-recent-first)
+- Each post displays:
+  - Author's name and avatar
+  - Post timestamp
+  - Content and images
+  - Like and comment counts
+- Multiple image support (up to 5 images per post)
+- Hashtag extraction and tagging system
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### 👤 Profile
+- Complete user profile management
+- Display user information (name, email, avatar, bio, profession)
+- Show all posts created by the current user
+- Customizable user expertise and tags
+- Project showcase portfolio
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### 🔍 Advanced Features
+- Real-time search across users, posts, and projects
+- Search history persistence
+- Image optimization and compression
+- Smooth navigation with Expo Router
+- Responsive design for both iOS and Android
 
-## Get a fresh project
+## 🛠 Tech Stack
 
-When you're ready, run:
+### Frontend
+- **React Native** with Expo for cross-platform development
+- **TypeScript** for type-safe code
+- **Expo Router** for file-based navigation
+- **React Context** for state management
+- **Expo Image Picker** for image selection
 
+### Backend & Services
+- **Convex** (Primary Backend)
+  - Real-time database
+  - Authentication integration
+  - Search functionality
+  - User and project management
+- **Firebase** (Posts & Storage)
+  - Firestore for post data
+  - Storage for image uploads
+  - Reliable file management
+
+### Storage & Database
+- **Convex Database**: Users, projects, search history, comments, likes
+- **Firebase Firestore**: Posts collection
+- **Firebase Storage**: Image files and media
+- **AsyncStorage**: Local session persistence
+
+### Authentication
+- **Custom Auth Context** with Convex integration
+- Session persistence with AsyncStorage
+- Protected route management
+
+## 📦 Installation & Setup
+
+### Prerequisites
+- Node.js (v18 or higher)
+- Expo CLI
+- iOS Simulator (Xcode) or Android Studio
+- Convex account
+- Firebase account
+
+### 1. Clone the Repository
 ```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+git clone https://github.com/your-username/framez-app.git
+cd framez-app
