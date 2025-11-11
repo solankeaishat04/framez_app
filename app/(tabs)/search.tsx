@@ -9,9 +9,10 @@ import {
   StyleSheet,
   Keyboard,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useSearch } from '@/context/SearchContext';
+import { useSearch, SearchResult } from '@/context/SearchContext';
 
 export default function SearchScreen() {
   const router = useRouter();
@@ -35,6 +36,8 @@ export default function SearchScreen() {
     setLocalQuery(query);
     if (query.length >= 2) {
       performSearch(query);
+    } else if (query.length === 0) {
+      clearSearch();
     }
   };
 
@@ -49,37 +52,48 @@ export default function SearchScreen() {
     performSearch(query);
   };
 
-  const renderSearchItem = ({ item }: { item: any }) => (
+  const handleUserPress = (user: SearchResult) => {
+    if (user.type === 'user') {
+      router.push({
+        pathname: "/usersProfile",
+        params: { userId: user._id }
+      });
+    }
+    // Add navigation for other types if needed
+    // if (user.type === 'post') {
+    //   router.push(`/post/${user._id}`);
+    // }
+  };
+
+  const renderSearchItem = ({ item }: { item: SearchResult }) => (
     <TouchableOpacity 
       style={styles.resultItem}
-      onPress={() => {
-        if (item.type === 'user') {
-          router.push('/profile');
-        } else {
-          router.push('/');
-        }
-      }}
+      onPress={() => handleUserPress(item)}
     >
       <View style={styles.resultContent}>
         {item.imageUrl ? (
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {item.name.charAt(0).toUpperCase()}
-            </Text>
-          </View>
+          <Image
+            source={{ uri: item.imageUrl }}
+            style={styles.avatar}
+          />
         ) : (
           <View style={[styles.avatar, styles.defaultAvatar]}>
             <Text style={styles.avatarText}>
-              {item.type.charAt(0).toUpperCase()}
+              {item.name?.charAt(0).toUpperCase() || 'U'}
             </Text>
           </View>
         )}
         <View style={styles.textContainer}>
           <Text style={styles.resultName}>{item.name}</Text>
           <Text style={styles.resultType}>{item.type}</Text>
-          {item.expertise && (
-            <Text style={styles.expertise}>
+          {item.expertise && item.expertise.length > 0 && (
+            <Text style={styles.expertise} numberOfLines={1}>
               {item.expertise.slice(0, 3).join(' • ')}
+            </Text>
+          )}
+          {item.title && (
+            <Text style={styles.title} numberOfLines={1}>
+              {item.title}
             </Text>
           )}
         </View>
@@ -91,7 +105,6 @@ export default function SearchScreen() {
     <TouchableOpacity 
       style={styles.historyItem}
       onPress={() => handleHistoryItemPress(item)}
-      onLongPress={() => removeFromHistory(item)}
     >
       <Text style={styles.historyText}>⌕ {item}</Text>
       <TouchableOpacity 
@@ -110,17 +123,17 @@ export default function SearchScreen() {
         <View style={styles.searchContainer}>
           <TextInput
             style={styles.searchInput}
-            placeholder="Describe what you're looking for..."
+            placeholder="Search users, posts..."
             placeholderTextColor="#999"
             value={localQuery}
             onChangeText={handleSearch}
             autoFocus
             returnKeyType="search"
-            onSubmitEditing={() => performSearch(localQuery)}
+            onSubmitEditing={() => localQuery.trim() && performSearch(localQuery)}
           />
           {localQuery ? (
-            <TouchableOpacity onPress={handleClear} style={styles.cancelButton}>
-              <Text style={styles.cancelText}>Cancel</Text>
+            <TouchableOpacity onPress={handleClear} style={styles.clearButton}>
+              <Text style={styles.clearText}>✕</Text>
             </TouchableOpacity>
           ) : null}
         </View>
@@ -133,30 +146,40 @@ export default function SearchScreen() {
             <ActivityIndicator size="small" color="#007AFF" />
             <Text style={styles.loadingText}>Searching...</Text>
           </View>
-        ) : searchQuery && searchResults.length > 0 ? (
+        ) : localQuery && searchResults.length > 0 ? (
           <FlatList
             data={searchResults}
             renderItem={renderSearchItem}
-            keyExtractor={(item) => item._id.toString()}
+            keyExtractor={(item) => item._id}
             showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.listContent}
           />
-        ) : searchQuery ? (
+        ) : localQuery ? (
           <View style={styles.noResults}>
-            <Text style={styles.noResultsText}>No results found</Text>
+            <Text style={styles.noResultsText}>No results found for &quot;{localQuery}&quot;</Text>
+            <Text style={styles.noResultsSubtext}>Try different keywords</Text>
           </View>
         ) : (
           <View style={styles.historyContainer}>
-            <Text style={styles.historyTitle}>Recent Searches</Text>
-            <FlatList
-              data={searchHistory}
-              renderItem={renderHistoryItem}
-              keyExtractor={(item, index) => index.toString()}
-              showsVerticalScrollIndicator={false}
-            />
+            {searchHistory.length > 0 && (
+              <>
+                <Text style={styles.historyTitle}>Recent Searches</Text>
+                <FlatList
+                  data={searchHistory}
+                  renderItem={renderHistoryItem}
+                  keyExtractor={(item, index) => index.toString()}
+                  showsVerticalScrollIndicator={false}
+                  contentContainerStyle={styles.listContent}
+                />
+              </>
+            )}
             {searchHistory.length === 0 && (
-              <Text style={styles.emptyHistory}>
-                Your search history will appear here
-              </Text>
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyStateTitle}>Start searching</Text>
+                <Text style={styles.emptyStateText}>
+                  Find users, posts, and projects in your community
+                </Text>
+              </View>
             )}
           </View>
         )}
@@ -181,29 +204,35 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    position: 'relative',
   },
   searchInput: {
     flex: 1,
-    height: 40,
+    height: 44,
     backgroundColor: '#fff',
     borderRadius: 10,
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
     fontSize: 16,
     borderWidth: 1,
     borderColor: '#ddd',
+    paddingRight: 40, // Space for clear button
   },
-  cancelButton: {
-    marginLeft: 12,
+  clearButton: {
+    position: 'absolute',
+    right: 12,
+    padding: 4,
   },
-  cancelText: {
-    color: '#007AFF',
+  clearText: {
+    color: '#999',
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: 'bold',
   },
   resultsContainer: {
     flex: 1,
     paddingHorizontal: 16,
-    paddingTop: 16,
+  },
+  listContent: {
+    paddingBottom: 20,
   },
   loadingContainer: {
     flex: 1,
@@ -225,16 +254,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#007AFF',
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     marginRight: 12,
   },
   defaultAvatar: {
     backgroundColor: '#666',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   avatarText: {
     color: '#fff',
@@ -248,6 +276,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     marginBottom: 2,
+    color: '#1F2937',
   },
   resultType: {
     fontSize: 14,
@@ -258,9 +287,16 @@ const styles = StyleSheet.create({
   expertise: {
     fontSize: 12,
     color: '#999',
+    marginBottom: 2,
+  },
+  title: {
+    fontSize: 13,
+    color: '#6B7280',
+    fontStyle: 'italic',
   },
   historyContainer: {
     flex: 1,
+    paddingTop: 16,
   },
   historyTitle: {
     fontSize: 18,
@@ -279,27 +315,52 @@ const styles = StyleSheet.create({
   historyText: {
     fontSize: 16,
     color: '#333',
+    flex: 1,
   },
   removeButton: {
     padding: 4,
+    marginLeft: 8,
   },
   removeText: {
     fontSize: 20,
     color: '#999',
+    fontWeight: '300',
   },
   noResults: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 40,
   },
   noResultsText: {
     fontSize: 16,
-    color: '#999',
-  },
-  emptyHistory: {
+    color: '#666',
+    fontWeight: '500',
     textAlign: 'center',
+    marginBottom: 8,
+  },
+  noResultsSubtext: {
+    fontSize: 14,
     color: '#999',
-    fontSize: 16,
-    marginTop: 40,
+    textAlign: 'center',
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  emptyStateTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  emptyStateText: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 20,
   },
 });

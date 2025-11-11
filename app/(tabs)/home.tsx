@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import React, { useState, useEffect, useCallback } from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -28,6 +29,7 @@ import {
 } from '@/service/supabasePost';
 
 export default function HomeScreen() {
+  const router = useRouter();
   const [posts, setPosts] = useState<SupabasePost[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -128,6 +130,16 @@ export default function HomeScreen() {
     }
   };
 
+  const handleUserPress = (post: SupabasePost) => {
+    if (post.author_id) {
+      router.push({
+      pathname: "/usersProfile",
+      params: { userId: post.author_id }
+    });
+    
+    }
+  };
+
   const showPostOptions = (post: SupabasePost) => {
     if (Platform.OS === 'ios') {
       ActionSheetIOS.showActionSheetWithOptions(
@@ -206,7 +218,10 @@ export default function HomeScreen() {
   const renderPost = ({ item }: { item: SupabasePost }) => (
     <ThemedView style={styles.postCard}>
       <ThemedView style={styles.postHeader}>
-        <ThemedView style={styles.userInfo}>
+        <TouchableOpacity 
+          style={styles.userInfo}
+          onPress={() => handleUserPress(item)}
+        >
           {item.author_avatar ? (
             <Image
               source={{ uri: item.author_avatar }}
@@ -226,7 +241,7 @@ export default function HomeScreen() {
               {formatDate(item.created_at)}
             </ThemedText>
           </ThemedView>
-        </ThemedView>
+        </TouchableOpacity>
         
         {currentUser && item.author_id === currentUser._id && (
           <TouchableOpacity onPress={() => showPostOptions(item)}>
@@ -316,19 +331,19 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ThemedView style={styles.header}>
-  <Image 
-    style={styles.logo} 
-    source={require('../../assets/images/LOGOFRAMEZ-removebg-preview.png')}
-  />
-  <ThemedView style={styles.headerIcons}>
-    <TouchableOpacity style={styles.headerIcon}>
-      <Ionicons name="notifications-outline" size={24} color="#333" />
-    </TouchableOpacity>
-    <TouchableOpacity style={styles.headerIcon}>
-      <Ionicons name="mail-outline" size={24} color="#333" />
-    </TouchableOpacity>
-  </ThemedView>
-</ThemedView>
+        <Image 
+          style={styles.logo} 
+          source={require('../../assets/images/LOGOFRAMEZ-removebg-preview.png')}
+        />
+        <ThemedView style={styles.headerIcons}>
+          <TouchableOpacity style={styles.headerIcon}>
+            <Ionicons name="notifications-outline" size={24} color="#333" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.headerIcon}>
+            <Ionicons name="mail-outline" size={24} color="#333" />
+          </TouchableOpacity>
+        </ThemedView>
+      </ThemedView>
 
       {loading ? (
         <ThemedView style={styles.loadingContainer}>
@@ -392,7 +407,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#000',
+    color: '#ffff',
   },
   headerIcons: {
     flexDirection: 'row',
@@ -458,11 +473,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     marginBottom: 2,
-    color: '#ffff',
+    color: '#fff',
   },
   timeAgo: {
     fontSize: 13,
-    color: '#666',
+    color: '#7bafd2ff',
     fontWeight: '500',
   },
   postContent: {

@@ -15,13 +15,13 @@ export default defineSchema({
     bio: v.optional(v.string()),
     location: v.optional(v.string()),
     profession: v.optional(v.string()),
+    // ADDED: Follower arrays for efficient querying
+    followers: v.optional(v.array(v.id("users"))),
+    following: v.optional(v.array(v.id("users"))),
   })
   .index("by_email", ["email"])
   .searchIndex("search_name", { 
     searchField: "name" 
-  })
-  .searchIndex("search_expertise", {
-    searchField: "expertise"
   }),
 
   // UPDATED: Posts table with multiple images support and storage IDs
@@ -64,14 +64,13 @@ export default defineSchema({
     searchField: "description"
   }),
 
+  // UPDATED: Search history table - simplified for global search history
   searchHistory: defineTable({
-    userId: v.string(),
     query: v.string(),
     timestamp: v.number(),
   })
-  .index("by_user", ["userId"])
-  .index("by_user_query", ["userId", "query"])
-  .index("by_timestamp", ["timestamp"]),
+  .index("by_timestamp", ["timestamp"])
+  .index("by_query", ["query"]),
 
   followers: defineTable({
     followerId: v.id("users"),

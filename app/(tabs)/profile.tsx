@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // screens/ProfileScreen.tsx
 import React, { useState, useEffect, useCallback } from "react";
 import {
@@ -20,18 +21,26 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { getUserSupabasePosts, SupabasePost, subscribeToPosts } from "@/service/supabasePost";
+import { useRouter } from "expo-router";
 
 const { width } = Dimensions.get("window");
 
 const Profile = () => {
   const { state: authState, logout, updateProfile } = useAuth();
+  const router = useRouter();
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [editProfileVisible, setEditProfileVisible] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [userPosts, setUserPosts] = useState<SupabasePost[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
 
+  // Get user data from Convex
   const userData = useQuery(api.users.getUserById, 
+    authState.user?._id ? { userId: authState.user._id as Id<"users"> } : "skip"
+  );
+
+  // Get user stats from Convex
+  const userStats = useQuery(api.users.getUserStats, 
     authState.user?._id ? { userId: authState.user._id as Id<"users"> } : "skip"
   );
 
@@ -157,8 +166,8 @@ const Profile = () => {
     );
   };
 
-  const handleFollow = () => {
-    Alert.alert("Follow", "Follow functionality coming soon!");
+  const handleBack = () => {
+    router.back();
   };
 
   if (!authState.user && !authState.isLoading) {
@@ -186,14 +195,24 @@ const Profile = () => {
 
   const showUserDetails = userLocation || userProfession;
 
+  // Safe stats calculation - Use Convex stats for followers/following, Supabase for posts
   const postsCount = userPosts.length;
-  const totalLikes = userPosts.reduce((sum, post) => sum + (post.likes_count || 0), 0);
-  const totalComments = userPosts.reduce((sum, post) => sum + (post.comments_count || 0), 0);
+
+  // Calculate likes and comments from Supabase posts
+  const totalLikes = userPosts.reduce((sum, post) => {
+    if (!post) return sum;
+    return sum + (post.likes_count || 0);
+  }, 0);
+
+
+  // Use Convex stats for followers and following
+  const followersCount = userStats?.followersCount || 0;
+  const followingCount = userStats?.followingCount || 0;
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.headerButton}>
+        <TouchableOpacity style={styles.headerButton} onPress={handleBack}>
           <Ionicons name="chevron-back" size={28} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Profile</Text>
@@ -236,12 +255,12 @@ const Profile = () => {
               <Text style={styles.statLabel}>POSTS</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{totalLikes}</Text>
-              <Text style={styles.statLabel}>LIKES</Text>
+              <Text style={styles.statNumber}>{followersCount}</Text>
+              <Text style={styles.statLabel}>FOLLOWERS</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{totalComments}</Text>
-              <Text style={styles.statLabel}>COMMENTS</Text>
+              <Text style={styles.statNumber}>{followingCount}</Text>
+              <Text style={styles.statLabel}>FOLLOWING</Text>
             </View>
           </View>
 
@@ -251,12 +270,6 @@ const Profile = () => {
               onPress={handleEditProfile}
             >
               <Text style={styles.editProfileButtonText}>EDIT PROFILE</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.followButton}
-              onPress={handleFollow}
-            >
-              <Text style={styles.followButtonText}>FOLLOW</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -293,9 +306,13 @@ const Profile = () => {
                   <View style={styles.postOverlay}>
                     <View style={styles.postStats}>
                       <Ionicons name="heart" size={16} color="#fff" />
-                      <Text style={styles.postStatText}>{post.likes_count || 0}</Text>
+                      <Text style={styles.postStatText}>
+                        {post.likes_count || 0}
+                      </Text>
                       <Ionicons name="chatbubble" size={16} color="#fff" style={styles.statIcon} />
-                      <Text style={styles.postStatText}>{post.comments_count || 0}</Text>
+                      <Text style={styles.postStatText}>
+                        {post.comments_count || 0}
+                      </Text>
                     </View>
                   </View>
                 </TouchableOpacity>
@@ -565,7 +582,6 @@ const styles = StyleSheet.create({
   actionButtons: {
     flexDirection: "row",
     width: "100%",
-    gap: 12,
   },
   editProfileButton: {
     flex: 1,
@@ -575,19 +591,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   editProfileButtonText: {
-    color: "#fff",
-    fontSize: 15,
-    fontWeight: "bold",
-    letterSpacing: 0.5,
-  },
-  followButton: {
-    flex: 1,
-    backgroundColor: "#10B981",
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: "center",
-  },
-  followButtonText: {
     color: "#fff",
     fontSize: 15,
     fontWeight: "bold",

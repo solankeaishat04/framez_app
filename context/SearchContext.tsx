@@ -1,5 +1,5 @@
 // contexts/SearchContext.tsx
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useMemo } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 
@@ -11,6 +11,7 @@ export interface SearchResult {
   imageUrl?: string;
   title?: string;
   expertise?: string[];
+  bio?: string;
 }
 
 interface SearchContextType {
@@ -29,29 +30,35 @@ export const SearchProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
 
-  // Get search history from Convex - FIXED: Add proper error handling
+  // Get search history from Convex
   const searchHistoryData = useQuery(api.search.getSearchHistory);
   
-  // FIXED: Better query handling with proper typing
+  // Search results - only query when we have a search term
   const searchResultsData = useQuery(
     api.search.search, 
-    searchQuery ? { query: searchQuery } : "skip"
+    searchQuery.trim() ? { query: searchQuery.trim() } : 'skip'
   );
 
   const addToHistory = useMutation(api.search.addToSearchHistory);
   const removeFromHistoryMutation = useMutation(api.search.removeFromSearchHistory);
 
   const performSearch = async (query: string) => {
-    if (query.trim()) {
-      setSearchQuery(query);
-      setIsSearching(true);
-      try {
-        await addToHistory({ query: query.trim() });
-      } catch (error) {
-        console.error('Error adding to search history:', error);
-      } finally {
-        setIsSearching(false);
-      }
+    const trimmedQuery = query.trim();
+    if (!trimmedQuery) {
+      clearSearch();
+      return;
+    }
+
+    setSearchQuery(trimmedQuery);
+    setIsSearching(true);
+    
+    try {
+      // Add to search history
+      await addToHistory({ query: trimmedQuery });
+    } catch (error) {
+      console.error('Error adding to search history:', error);
+    } finally {
+      setIsSearching(false);
     }
   };
 
@@ -68,9 +75,16 @@ export const SearchProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }
   };
 
-  // FIXED: Ensure we always have arrays and proper data types
-  const searchHistory = searchHistoryData?.map(item => item.query) || [];
-  const searchResults = (searchResultsData || []) as SearchResult[];
+  // Memoize derived data to prevent unnecessary re-renders
+  const searchHistory = useMemo(() => 
+    searchHistoryData?.map(item => item.query) || [], 
+    [searchHistoryData]
+  );
+
+  const searchResults = useMemo(() => 
+    (searchResultsData || []) as SearchResult[], 
+    [searchResultsData]
+  );
 
   const value: SearchContextType = {
     searchQuery,

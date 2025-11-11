@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // app/_layout.tsx
 import {
   Manrope_200ExtraLight,
@@ -10,7 +11,7 @@ import {
   useFonts
 } from '@expo-google-fonts/manrope';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
-import { SearchProvider } from '@/context/SearchContext'; // Add SearchProvider import
+import { SearchProvider } from '@/context/SearchContext';
 import { ConvexProvider, ConvexReactClient } from "convex/react";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -32,19 +33,22 @@ function RootLayoutNav() {
     if (state.isLoading) return;
 
     const inAuthGroup = segments[0] === '(auth)';
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const inTabsGroup = segments[0] === '(tabs)';
-    // If your onboarding route is actually 'home', update accordingly; otherwise, remove or correct this check.
-    const isOnboarding = segments[0] === 'home';
+    const isOnboarding = String(segments[0]) === '(onboarding)';
 
+    // For authenticated users
     if (state.isAuthenticated) {
-      // If authenticated and on auth pages or onboarding, redirect to home
-      if (inAuthGroup || isOnboarding) {
+      // If on auth pages, redirect to home
+      if (inAuthGroup) {
         router.replace('/(tabs)/home');
       }
+      // If on onboarding, allow them to continue to home via buttons
+      // No redirect needed as onboarding handles navigation
     } else {
-      // If not authenticated and not on auth pages, redirect to signin
-      if (!inAuthGroup && !isOnboarding) {
+      // For unauthenticated users
+      // If not on auth pages and not on onboarding, redirect to signin
+      // Use segments.length to detect the root/index route instead of comparing to 'index'
+      if (!inAuthGroup && !isOnboarding && segments.length > 0) {
         router.replace('/(auth)/signin');
       }
     }
@@ -87,7 +91,7 @@ export default function RootLayout() {
   return (
     <ConvexProvider client={convex}>
       <AuthProvider>
-        <SearchProvider> {/* Wrap with SearchProvider */}
+        <SearchProvider>
           <RootLayoutNav />
         </SearchProvider>
       </AuthProvider>
