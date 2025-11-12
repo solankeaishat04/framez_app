@@ -88,5 +88,5 @@ A modern, full-featured social media application built with React Native, Expo, 
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/your-username/framez-app.git
+git clone https://github.com/solankeaishat04/framez-app.git
 cd framez-app
