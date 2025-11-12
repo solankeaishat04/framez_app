@@ -9,12 +9,20 @@
       "distribution": "internal"
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleDebug"
+      },
+      "env": {
+        "EXPO_PUBLIC_CONVEX_URL": "https://befitting-gecko-924.convex.cloud",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://gkauomhzipvdhzpyufjp.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdrYXVvbWh6aXB2ZGh6cHl1ZmpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3OTY2ODYsImV4cCI6MjA3ODM3MjY4Nn0.LduYkuHXQVtWwpZnJ1eArrCoNglGazR9QONxgPzEMIk"
+      }
     },
     "production": {
       "autoIncrement": true
     }
-    
   },
   "submit": {
     "production": {}
